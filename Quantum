@@ -1,1 +1,57 @@
+# Importing standard libraries
+import numpy as np
+from qiskit import QuantumCircuit, execute, transpile, Aer, IBMQ
+from qiskit.tools.jupyter import *
+from qiskit.visualization import *
+from ibm_quantum_widgets import *
+from qiskit.quantum_info import random_unitary # This will be used in the optional content
+print('Libraries imported successfully!')
 
+
+def superdense():
+    print(''' Legend :
+    Message 00 means type 00 
+    Message 01 means type 01 
+    Message 10 means type 10 
+    Message 11 means type 11 ''')
+    qc=QuantumCircuit(2,2)
+    qc.h(0)
+    qc.cx(0,1)
+    state= input('what message do you wish to send? please follow the legend')
+    if state=='00' :
+        None 
+    elif state=='01':
+        qc.z(0)
+    elif state=='10':
+        qc.x(0)
+    elif state=='11':
+        qc.z(0)
+        qc.x(0)
+    qc.cx(0,1)
+    qc.h(0)
+    qc.measure(0,0)
+    qc.measure(1,1)
+    qc.draw()
+    from qiskit.providers.ibmq import least_busy
+    shots = 256
+
+    # Load local account information
+    IBMQ.load_account()
+    # Get the least busy backend
+    provider = IBMQ.get_provider(hub='ibm-q')
+    backend = least_busy(provider.backends(filters=lambda x: x.configuration().n_qubits >= 2
+                                       and not x.configuration().simulator 
+                                       and x.status().operational==True))
+    print("least busy backend: ", backend)
+    # Run our circuit
+    job = execute(qc, backend=backend, shots=shots)
+    # Monitoring our job
+    from qiskit.tools.monitor import job_monitor
+    job_monitor(job)    
+    # Plotting our result
+    result = job.result()
+    plot_histogram(result.get_counts())
+
+
+# You can run this and call the function in IBM Quantum Lab 
+#Please don't mind my code, I'm not pro at this 
